@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "258733805658",
+    "project_id": "ntart-2359b",
+    "storage_bucket": "ntart-2359b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:258733805658:android:26e37bbce3fb6038894863",
+        "android_client_info": {
+          "package_name": "com.bnx.nftmaker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "258733805658-dj1m06ji1qunqbeq6asak6hg5je90lc4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsu9paFKtzMXucTOVElel2RsLc2IHUv6s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "258733805658-dj1m06ji1qunqbeq6asak6hg5je90lc4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

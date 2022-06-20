@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--ADMOB property -->
+    <string name="admob_app_id">ca-app-pub-9091278090921811~6418235350</string>
+    <string name="ad_admob_banner_unit_id">ca-app-pub-9091278090921811/8420725930</string>
+    <string name="ad_admob_interstitial_unit_id">ca-app-pub-9091278090921811/2513831124</string>
+    <string name="openAds">ca-app-pub-3940256099942544/3419835294</string>
+
+</resources>
