@@ -1,33 +1,33 @@
 {
   "project_info": {
-    "project_number": "258733805658",
-    "project_id": "ntart-2359b",
-    "storage_bucket": "ntart-2359b.appspot.com"
+    "project_number": "913463891958",
+    "project_id": "nftmaker-9dc47",
+    "storage_bucket": "nftmaker-9dc47.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:258733805658:android:26e37bbce3fb6038894863",
+        "mobilesdk_app_id": "1:913463891958:android:b0db8c48c8dd0e9a1399d7",
         "android_client_info": {
-          "package_name": "com.bnx.nftmaker"
+          "package_name": "com.lnx.nftmaker.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "258733805658-dj1m06ji1qunqbeq6asak6hg5je90lc4.apps.googleusercontent.com",
+          "client_id": "913463891958-9ms4ve7qlnc2pue9itq512virnpnegog.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAsu9paFKtzMXucTOVElel2RsLc2IHUv6s"
+          "current_key": "AIzaSyBrUQ_pbgGX-3NqoM_nyD10qFrcj28Gem0"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "258733805658-dj1m06ji1qunqbeq6asak6hg5je90lc4.apps.googleusercontent.com",
+              "client_id": "913463891958-9ms4ve7qlnc2pue9itq512virnpnegog.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

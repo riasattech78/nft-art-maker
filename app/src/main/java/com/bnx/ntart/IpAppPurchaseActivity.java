@@ -3,13 +3,20 @@ package com.bnx.ntart;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,28 +26,38 @@ import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.ConsumeParams;
+import com.android.billingclient.api.ConsumeResponseListener;
+import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
+import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.QueryPurchasesParams;
 import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
 import com.bnx.ntart.creator.activities.canvas.CanvasActivity;
 import com.bnx.ntart.data.StringConstants;
 import com.bnx.ntart.databinding.ActivityIpAppPurchaseBinding;
+import com.bnx.ntart.databinding.ProductItemBinding;
 import com.bnx.ntart.utils.Prefs;
+import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class IpAppPurchaseActivity extends AppCompatActivity {
 
-    ActivityIpAppPurchaseBinding binding;
-    TextView txt_price;
-    String TAG = "SubTest1";
+
+    String TAG = "TestINAPP";
     Activity activity;
-    Prefs prefs;
     private BillingClient billingClient;
+    List<ProductDetails> productDetailsList;
+    Handler handler;
+    ProductDetailsAdapter adapter;
+    private ActivityIpAppPurchaseBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,12 +66,8 @@ public class IpAppPurchaseActivity extends AppCompatActivity {
 
         setContentView(binding.getRoot());
 
+        //Initialize a BillingClient with PurchasesUpdatedListener onCreate method
 
-        initViews();
-
-        activity = this;
-
-        prefs = new Prefs(this);
 
         billingClient = BillingClient.newBuilder(this)
                 .enablePendingPurchases()
@@ -63,138 +76,132 @@ public class IpAppPurchaseActivity extends AppCompatActivity {
                             @Override
                             public void onPurchasesUpdated(@NonNull BillingResult billingResult, @Nullable List<Purchase> list) {
                                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null) {
-
                                     for (Purchase purchase : list) {
-                                        verifySubPurchase(purchase);
+                                        verifyPurchase(purchase);
                                     }
                                 }
-
                             }
                         }
                 ).build();
 
         //start the connection after initializing the billing client
-        establishConnection();
+        connectGooglePlayBilling();
 
-        binding.imgClose.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onBackPressed();
-                finish();
-            }
-        });
+
     }
 
-
-    void establishConnection() {
-
+    void connectGooglePlayBilling() {
         billingClient.startConnection(new BillingClientStateListener() {
+            @Override
+            public void onBillingServiceDisconnected() {
+                connectGooglePlayBilling();
+            }
+
             @Override
             public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    // The BillingClient is ready. You can query purchases here.
                     showProducts();
                 }
             }
-
-            @Override
-            public void onBillingServiceDisconnected() {
-                // Try to restart the connection on the next request to
-                // Google Play by calling the startConnection() method.
-                establishConnection();
-            }
         });
+
     }
 
+    @SuppressLint("SetTextI18n")
     void showProducts() {
 
-        List<String> skuList = new ArrayList<>();
-        skuList.add("nt_art_6");
-        SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
-        params.setSkusList(skuList).setType(BillingClient.SkuType.SUBS);
-        billingClient.querySkuDetailsAsync(params.build(),
-                new SkuDetailsResponseListener() {
-                    @SuppressLint("SetTextI18n")
-                    @Override
-                    public void onSkuDetailsResponse(@NonNull BillingResult billingResult,
-                                                     List<SkuDetails> skuDetailsList) {
-                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && skuDetailsList != null) {
-                            // Process the result.
-                            for (SkuDetails skuDetails : skuDetailsList) {
-                                if (skuDetails.getSku().equals("nt_art_6")) {
-                                    //Now update the UI
-                                    txt_price.setText("3 Day’s Free Trial Then " + skuDetails.getPrice() + " 6 Month Cancel Anytime");
-                                    binding.tvBuyNow.setOnClickListener(view -> {
-                                        launchPurchaseFlow(skuDetails);
-                                    });
-                                }
-                            }
+        ImmutableList<QueryProductDetailsParams.Product> productList = ImmutableList.of(
+                //Product 1
+                QueryProductDetailsParams.Product.newBuilder()
+                        .setProductId("product_item_app2_1")
+                        .setProductType(BillingClient.ProductType.INAPP)
+                        .build(),
+
+                //Product 2
+                QueryProductDetailsParams.Product.newBuilder()
+                        .setProductId("product_item_app2_2")
+                        .setProductType(BillingClient.ProductType.INAPP)
+                        .build(),
+
+                //Product 3
+                QueryProductDetailsParams.Product.newBuilder()
+                        .setProductId("product_item_app2_3")
+                        .setProductType(BillingClient.ProductType.INAPP)
+                        .build(),
+
+                //Product 4
+                QueryProductDetailsParams.Product.newBuilder()
+                        .setProductId("product_item_app2_4")
+                        .setProductType(BillingClient.ProductType.INAPP)
+                        .build()
+        );
+
+        QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
+                .setProductList(productList)
+                .build();
+
+        billingClient.queryProductDetailsAsync(params, (billingResult, list) -> {
+            productDetailsList.clear();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "posted delayed");
+                    binding.loadProducts.setVisibility(View.INVISIBLE); //
+                    productDetailsList.addAll(list);
+                    Log.d(TAG, productDetailsList.size() + " number of products");
+                    adapter = new ProductDetailsAdapter(getApplicationContext(), productDetailsList, new ProductDetailsAdapter.OnItemClick() {
+                        @Override
+                        public void onItemClick(int pos) {
+                            launchPurchaseFlow(productDetailsList.get(pos));
                         }
-                    }
-                });
-    }
-
-    void launchPurchaseFlow(SkuDetails skuDetails) {
-        BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
-                .setSkuDetails(skuDetails)
-                .build();
-        billingClient.launchBillingFlow(IpAppPurchaseActivity.this, billingFlowParams);
-    }
-
-
-    void verifySubPurchase(Purchase purchases) {
-
-        AcknowledgePurchaseParams acknowledgePurchaseParams = AcknowledgePurchaseParams
-                .newBuilder()
-                .setPurchaseToken(purchases.getPurchaseToken())
-                .build();
-
-        billingClient.acknowledgePurchase(acknowledgePurchaseParams, new AcknowledgePurchaseResponseListener() {
-            @Override
-            public void onAcknowledgePurchaseResponse(@NonNull BillingResult billingResult) {
-                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    //Toast.makeText(SubscriptionActivity.this, "Item Consumed", Toast.LENGTH_SHORT).show();
-                    // Handle the success of the consume operation.
-                    //user prefs to set premium
-                    Toast.makeText(IpAppPurchaseActivity.this, "You are a premium user now", Toast.LENGTH_SHORT).show();
-                    //updateUser();
-                    //Setting premium to 1
-                    // 1 - premium
-                    //0 - no premium
-                    prefs.setPremium(1);
-                    startActivity(
-                            new Intent(IpAppPurchaseActivity.this, CanvasActivity.class)
-                                    .putExtra(StringConstants.SPAN_COUNT_EXTRA, ActivityHome.Companion.getSpanCnt()));
-                }else {
-                    Toast.makeText(IpAppPurchaseActivity.this, "You are not premium user", Toast.LENGTH_SHORT).show();
-
+                    });
+                    binding.recyclerview.setHasFixedSize(true);
+                    binding. recyclerview.setLayoutManager(new LinearLayoutManager(IpAppPurchaseActivity.this, LinearLayoutManager.VERTICAL, false));
+                    binding.recyclerview.setAdapter(adapter);
                 }
-            }
+            }, 2000);
         });
-
-        Log.d(TAG, "Purchase Token: " + purchases.getPurchaseToken());
-        Log.d(TAG, "Purchase Time: " + purchases.getPurchaseTime());
-        Log.d(TAG, "Purchase OrderID: " + purchases.getOrderId());
     }
 
-    private void initViews() {
-        txt_price = findViewById(R.id.tv_price1);
+
+    void launchPurchaseFlow(ProductDetails productDetails) {
+
+        ImmutableList<BillingFlowParams.ProductDetailsParams> productDetailsParamsList =
+                ImmutableList.of(
+                        BillingFlowParams.ProductDetailsParams.newBuilder()
+                                .setProductDetails(productDetails)
+                                .build()
+                );
+        BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
+                .setProductDetailsParamsList(productDetailsParamsList)
+                .build();
+
+        BillingResult billingResult = billingClient.launchBillingFlow(activity, billingFlowParams);
+    }
+
+
+    void verifyPurchase(Purchase purchase) {
+        ConsumeParams consumeParams = ConsumeParams.newBuilder()
+                .setPurchaseToken(purchase.getPurchaseToken())
+                .build();
+        ConsumeResponseListener listener = (billingResult, s) -> {
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                giveUserCoins(purchase);
+            }
+        };
+        billingClient.consumeAsync(consumeParams, listener);
     }
 
 
     protected void onResume() {
         super.onResume();
-
         billingClient.queryPurchasesAsync(
-                BillingClient.SkuType.SUBS,
-                new PurchasesResponseListener() {
-                    @Override
-                    public void onQueryPurchasesResponse(@NonNull BillingResult billingResult, @NonNull List<Purchase> list) {
-                        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                            for (Purchase purchase : list) {
-                                if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged()) {
-                                    verifySubPurchase(purchase);
-                                }
+                QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build(),
+                (billingResult, list) -> {
+                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                        for (Purchase purchase : list) {
+                            if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged()) {
+                                verifyPurchase(purchase);
                             }
                         }
                     }
@@ -202,4 +209,71 @@ public class IpAppPurchaseActivity extends AppCompatActivity {
         );
 
     }
+
+
+    @SuppressLint("SetTextI18n")
+    void giveUserCoins(Purchase purchase) {
+
+        Log.d("TestINAPP", purchase.getProducts().get(0));
+        Log.d("TestINAPP", purchase.getQuantity() + " Quantity");
+
+
+    }
+
+    public static class ProductDetailsAdapter extends RecyclerView.Adapter<ProductDetailsAdapter.ViewHolderClas> {
+
+        Context mContext;
+        List<ProductDetails> productDetailsList;
+        OnItemClick onItemClick;
+
+        public ProductDetailsAdapter(Context mContext, List<ProductDetails> productDetailsList, OnItemClick onItemClick) {
+
+            this.mContext = mContext;
+            this.productDetailsList = productDetailsList;
+            this.onItemClick = onItemClick;
+        }
+
+        @NonNull
+        @Override
+        public ViewHolderClas onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+
+            View view = LayoutInflater.from(mContext).inflate(R.layout.product_item, parent, false);
+            return new ViewHolderClas(view);
+        }
+
+        @Override
+        public int getItemCount() {
+            return productDetailsList.size();
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolderClas holder, @SuppressLint("RecyclerView") int position) {
+
+            holder.productItemBinding.productName.setText(productDetailsList.get(position).getName());
+
+            holder.productItemBinding.rootView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    onItemClick.onItemClick(position);
+                }
+            });
+        }
+
+        public static class ViewHolderClas extends RecyclerView.ViewHolder {
+
+            ProductItemBinding productItemBinding;
+
+            public ViewHolderClas(@NonNull View itemView) {
+                super(itemView);
+                productItemBinding = ProductItemBinding.bind(itemView);
+            }
+        }
+
+
+        public interface OnItemClick {
+            void onItemClick(int pos);
+        }
+
+    }
+
 }

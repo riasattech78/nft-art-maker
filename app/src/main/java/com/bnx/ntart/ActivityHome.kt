@@ -200,6 +200,10 @@ class ActivityHome : AppCompatActivity() {
         binding.include.lytTnc.setOnClickListener {
             Tools.directLinkToBrowser(this, getString(R.string.term_and_condition_url))
         }
+
+        binding.include.PremiumUser.setOnClickListener {
+            startActivity(Intent(this,IpAppPurchaseActivity::class.java))
+        }
         binding.include.lytRateApp.setOnClickListener {
             Tools.rateAction(this)
         }
